@@ -9,8 +9,7 @@ import (
 
 func AddUserRoutes(router *mux.Router) error {
 	router.HandleFunc("/signup", controllers.SignUp).Methods("POST").Name("SignUp")
-
-	// router.HandleFunc("/signup",utils.ChainHandlerFuncs([]utils.Middleware{middlewares.Log,}, controllers.SignUp)).Methods("POST").Name("SignUp")
+	router.HandleFunc("/signin", controllers.SignIn).Methods("POST").Name("SignIn")
 
 	return nil
 }
