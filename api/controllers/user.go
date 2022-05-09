@@ -20,7 +20,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// create user in db
+	// create user in db level application
 	var user, dbUser models.User
 	if err := registrationReq.CreateUser(&user); err != nil {
 		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse(err.Error())), nil)
