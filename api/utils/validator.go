@@ -2,7 +2,6 @@ package utils
 
 import validator "github.com/asaskevich/govalidator"
 
-// IsInteger to validate if all value is integer from string type values
 func IsInteger(values ...string) bool {
 	for _, value := range values {
 		if !validator.IsInt(value) {
@@ -12,7 +11,6 @@ func IsInteger(values ...string) bool {
 	return true
 }
 
-// IsNonNegative is to validate if all value is non-negative integer from integer type values
 func IsNonNegative(values ...int) bool {
 	for _, value := range values {
 		if value < 0 {
@@ -22,7 +20,6 @@ func IsNonNegative(values ...int) bool {
 	return true
 }
 
-// IsNonEmpty to check whether the values is set to empty/zero in their corresponding type
 func IsNonEmpty(values ...interface{}) bool {
 	for _, value := range values {
 		switch value.(type) {

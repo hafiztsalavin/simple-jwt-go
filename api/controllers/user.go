@@ -9,12 +9,10 @@ import (
 	"simple-jwt-go/api/database"
 	"simple-jwt-go/api/models"
 	"simple-jwt-go/api/utils"
-	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/context"
-	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
@@ -28,7 +26,6 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create user in db level application
-	// reference of
 	var user, dbUser models.User
 	if err := registrationReq.CreateUser(&user); err != nil {
 		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse(err.Error())), nil)
@@ -73,7 +70,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	var creds auth.Credentials
 	var user models.User
 
-	// check post body paylod json request
+	// parse body paylod json request
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
 		utils.JSONResponseWriter(&w, http.StatusBadRequest, nil, nil)
 		return
@@ -97,6 +94,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check password
 	passTrue := utils.CheckPassword(creds.Password, user.Password)
 
 	if !passTrue {
@@ -105,6 +103,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	expirationTime := time.Now().Add(time.Minute * 5)
+
 	// build
 	claims := &auth.Claims{
 		ID:       user.ID,
@@ -126,16 +125,8 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
-	// idStr := mux.Vars(r)["id"]
+	// get user id from context
 	userID := context.Get(r, "id").(uint32)
-
-	// if idStr == "" || !utils.IsInteger(idStr) {
-	// 	utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("invalid id format")), nil)
-	// 	return
-	// }
-
-	// idStr64, _ := strconv.ParseUint(idStr, 10, 64)
-	// id := uint32(idStr64)
 
 	// connect db
 	db, err := database.ConnectDB()
@@ -157,12 +148,6 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// if userID != id {
-	// 	utils.JSONResponseWriter(&w, http.StatusForbidden,
-	// 		*(models.NewErrorResponse("can't do any action at this user")), nil)
-	// 	return
-	// }
-
 	var userRes models.UserResponse
 	if err := userRes.InsertFromModel(dbUser); err != nil {
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
@@ -174,7 +159,6 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
-	// ambil id user dari context
 	userID := context.Get(r, "id").(uint32)
 
 	// parse body paylod json request
@@ -239,16 +223,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	idStr := mux.Vars(r)["id"]
 	userID := context.Get(r, "id").(uint32)
-
-	if idStr == "" || !utils.IsInteger(idStr) {
-		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("invalid id format")), nil)
-		return
-	}
-
-	idStr64, _ := strconv.ParseUint(idStr, 10, 64)
-	id := uint32(idStr64)
 
 	// connect db
 	db, err := database.ConnectDB()
@@ -258,7 +233,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var dbUser models.User
-	if err := db.Where("id = ?", id).First(&dbUser).Error; err != nil {
+	if err := db.Where("id = ?", userID).First(&dbUser).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			utils.JSONResponseWriter(&w, http.StatusNotFound,
 				*(models.NewErrorResponse("can't find this user")), nil)
@@ -270,12 +245,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userID != id {
-		utils.JSONResponseWriter(&w, http.StatusForbidden, *(models.NewErrorResponse("can't do any action at this user")), nil)
-		return
-	}
-
-	if err := db.Delete(&dbUser, id).Error; err != nil {
+	if err := db.Delete(&dbUser, userID).Error; err != nil {
 		utils.JSONResponseWriter(&w, http.StatusForbidden, *(models.NewErrorResponse(err.Error())), nil)
 		return
 	}

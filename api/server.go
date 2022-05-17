@@ -16,7 +16,8 @@ func Run() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", homePage)
 
-	routers.AddUserRoutes(r)
+	// initialize routes
+	routers.UserRoutes(r)
 
 	writeTimeout, _ := strconv.Atoi(os.Getenv("WRITE_TIMEOUT_SEC"))
 	readTimeout, _ := strconv.Atoi(os.Getenv("READ_TIMEOUT_SEC"))

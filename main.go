@@ -18,7 +18,7 @@ func main() {
 	} else {
 		if len(os.Args) > 2 && os.Args[2] == "migrate" {
 			if err := migrations.MigrateModels(); err != nil {
-				log.Fatalf("Error encountered when migrate models, %v", err)
+				log.Fatalf("Error when migrate models, %v", err)
 			}
 		} else {
 			api.Run()
