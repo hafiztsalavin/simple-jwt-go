@@ -13,10 +13,10 @@ func AddUserRoutes(router *mux.Router) error {
 	router.HandleFunc("/signup", controllers.SignUp).Methods("POST").Name("SignUp")
 	router.HandleFunc("/signin", controllers.SignIn).Methods("POST").Name("SignIn")
 
-	userRouter := router.PathPrefix("/users").Subrouter()
-	userRouter.Path("/{id}").HandlerFunc(utils.ChainHandlerFuncs([]utils.Middleware{middlewares.CheckJWT}, controllers.GetUser)).Methods("GET").Name("GetUser")
-	userRouter.Queries().HandlerFunc(utils.ChainHandlerFuncs([]utils.Middleware{middlewares.CheckJWT}, controllers.UpdateUser)).Methods("PATCH").Name("UpdateUser")
+	userRouter := router.PathPrefix("/user").Subrouter()
+	userRouter.HandleFunc("/", utils.ChainHandlerFuncs([]utils.Middleware{middlewares.CheckJWT}, controllers.GetUser)).Methods("GET").Name("GetUser")
 	userRouter.Path("/{id}").HandlerFunc(utils.ChainHandlerFuncs([]utils.Middleware{middlewares.CheckJWT}, controllers.DeleteUser)).Methods("DELETE").Name("DeleteUser")
+	userRouter.Queries().HandlerFunc(utils.ChainHandlerFuncs([]utils.Middleware{middlewares.CheckJWT}, controllers.UpdateUser)).Methods("PATCH").Name("UpdateUser")
 
 	return nil
 }

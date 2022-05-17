@@ -10,6 +10,7 @@ import (
 	"simple-jwt-go/api/models"
 	"simple-jwt-go/api/utils"
 	"strconv"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/context"
@@ -103,12 +104,14 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// expirationTime := time.Now().Add(time.Minute * 5)
+	expirationTime := time.Now().Add(time.Minute * 5)
 	// build
 	claims := &auth.Claims{
-		ID:             user.ID,
-		Username:       creds.Username,
-		StandardClaims: jwt.StandardClaims{},
+		ID:       user.ID,
+		Username: creds.Username,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -123,16 +126,16 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
-	idStr := mux.Vars(r)["id"]
+	// idStr := mux.Vars(r)["id"]
 	userID := context.Get(r, "id").(uint32)
 
-	if idStr == "" || !utils.IsInteger(idStr) {
-		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("invalid id format")), nil)
-		return
-	}
+	// if idStr == "" || !utils.IsInteger(idStr) {
+	// 	utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("invalid id format")), nil)
+	// 	return
+	// }
 
-	idStr64, _ := strconv.ParseUint(idStr, 10, 64)
-	id := uint32(idStr64)
+	// idStr64, _ := strconv.ParseUint(idStr, 10, 64)
+	// id := uint32(idStr64)
 
 	// connect db
 	db, err := database.ConnectDB()
@@ -142,7 +145,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var dbUser models.User
-	if err := db.Where("id = ?", id).First(&dbUser).Error; err != nil {
+	if err := db.Where("id = ?", userID).First(&dbUser).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			utils.JSONResponseWriter(&w, http.StatusNotFound,
 				*(models.NewErrorResponse("can't find this user")), nil)
@@ -154,11 +157,11 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userID != id {
-		utils.JSONResponseWriter(&w, http.StatusForbidden,
-			*(models.NewErrorResponse("can't do any action at this user")), nil)
-		return
-	}
+	// if userID != id {
+	// 	utils.JSONResponseWriter(&w, http.StatusForbidden,
+	// 		*(models.NewErrorResponse("can't do any action at this user")), nil)
+	// 	return
+	// }
 
 	var userRes models.UserResponse
 	if err := userRes.InsertFromModel(dbUser); err != nil {
