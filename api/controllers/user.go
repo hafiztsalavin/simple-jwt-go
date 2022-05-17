@@ -9,23 +9,17 @@ import (
 	"simple-jwt-go/api/database"
 	"simple-jwt-go/api/models"
 	"simple-jwt-go/api/utils"
+	"strconv"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
-// SignUp is function for create New User
-// @Title Sign Up
-// @Description Create a new user from JSON-formatted request body
-// @Param post body auth.Credentials true "auth.Credential"
-// @Success 201 object "Created - No Body"
-// @Success 400 object models.ErrorResponse "ErrorResponse JSON"
-// @Success 500 object models.ErrorResponse "Created - No Body"
-// @Route /signup [post]
-
 func SignUp(w http.ResponseWriter, r *http.Request) {
 
-	// check body paylod json request
+	// parse body paylod json request
 	var registrationReq models.RegistrationRequest
 	if err := json.NewDecoder(r.Body).Decode(&registrationReq); err != nil {
 		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("invalid body format")), nil)
@@ -33,6 +27,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create user in db level application
+	// reference of
 	var user, dbUser models.User
 	if err := registrationReq.CreateUser(&user); err != nil {
 		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse(err.Error())), nil)
@@ -73,15 +68,6 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	utils.JSONResponseWriter(&w, http.StatusCreated, nil, nil)
 }
 
-// SignIn is function for sign in also to get token JWT for creds/auth
-// @Title Sign In
-// @Description Sign in with JSON-formatted request body
-// @Param body models.RegistrationRequest
-// @Success 200 object auth.Claims "auth.Claims"
-// @Success 400 object models.ErrorResponse "ErrorResponse JSON"
-// @Success 500 object models.ErrorResponse "Created - No Body"
-// @Route /signup
-
 func SignIn(w http.ResponseWriter, r *http.Request) {
 	var creds auth.Credentials
 	var user models.User
@@ -117,6 +103,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// expirationTime := time.Now().Add(time.Minute * 5)
 	// build
 	claims := &auth.Claims{
 		ID:             user.ID,
@@ -132,5 +119,52 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.JSONResponseWriter(&w, http.StatusOK, map[string]interface{}{"token": tokenString}, nil)
+	return
+}
+
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	userID := context.Get(r, "id").(uint32)
+
+	if idStr == "" || !utils.IsInteger(idStr) {
+		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("invalid id format")), nil)
+		return
+	}
+
+	idStr64, _ := strconv.ParseUint(idStr, 10, 64)
+	id := uint32(idStr64)
+
+	// connect db
+	db, err := database.ConnectDB()
+	if err != nil || db == nil {
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+	var dbUser models.User
+	if err := db.Where("id = ?", id).First(&dbUser).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.JSONResponseWriter(&w, http.StatusNotFound,
+				*(models.NewErrorResponse("can't find this user")), nil)
+			return
+		}
+
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError,
+			*(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+
+	if userID != id {
+		utils.JSONResponseWriter(&w, http.StatusForbidden,
+			*(models.NewErrorResponse("can't do any action at this user")), nil)
+		return
+	}
+
+	var userRes models.UserResponse
+	if err := userRes.InsertFromModel(dbUser); err != nil {
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+
+	utils.JSONResponseWriter(&w, http.StatusOK, userRes, nil)
 	return
 }

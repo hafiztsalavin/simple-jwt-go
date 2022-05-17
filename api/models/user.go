@@ -23,6 +23,13 @@ type RegistrationRequest struct {
 	Password string `json:"password"`
 }
 
+type UserResponse struct {
+	ID        uint32    `json:"id"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"registered_at"`
+}
+
 func (rr *RegistrationRequest) CreateUser(target *User) error {
 	if !utils.IsNonEmpty(rr.Username, rr.Email, rr.Password) {
 		return errors.New("empty format")
@@ -36,5 +43,13 @@ func (rr *RegistrationRequest) CreateUser(target *User) error {
 	target.Username = rr.Username
 	target.Password = rr.Password
 
+	return nil
+}
+
+func (ur *UserResponse) InsertFromModel(user User) error {
+	ur.ID = user.ID
+	ur.Username = user.Username
+	ur.Email = user.Email
+	ur.CreatedAt = user.CreatedAt
 	return nil
 }
