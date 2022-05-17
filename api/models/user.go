@@ -30,6 +30,12 @@ type UserResponse struct {
 	CreatedAt time.Time `json:"registered_at"`
 }
 
+type UserUpdateRequest struct {
+	ID       uint32 `json:"id"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func (rr *RegistrationRequest) CreateUser(target *User) error {
 	if !utils.IsNonEmpty(rr.Username, rr.Email, rr.Password) {
 		return errors.New("empty format")
@@ -51,5 +57,27 @@ func (ur *UserResponse) InsertFromModel(user User) error {
 	ur.Username = user.Username
 	ur.Email = user.Email
 	ur.CreatedAt = user.CreatedAt
+	return nil
+}
+
+func (ur *UserUpdateRequest) UpdateUserModel(target *User) error {
+	if ur.ID == 0 {
+		return errors.New("id cannot be left blank/empty")
+	}
+
+	if !validator.IsPrintableASCII(ur.Password) || !validator.IsEmail(ur.Email) {
+		return errors.New("email/password have bad format or character")
+	}
+
+	if ur.Email != "" {
+		target.Email = ur.Email
+	}
+
+	if ur.Password != "" {
+		target.Password = ur.Password
+	}
+
+	target.ID = ur.ID
+
 	return nil
 }

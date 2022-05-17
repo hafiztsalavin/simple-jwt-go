@@ -140,6 +140,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
 		return
 	}
+
 	var dbUser models.User
 	if err := db.Where("id = ?", id).First(&dbUser).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -164,6 +165,120 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
 		return
 	}
+
+	utils.JSONResponseWriter(&w, http.StatusOK, userRes, nil)
+	return
+}
+
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+	// ambil id user dari context
+	userID := context.Get(r, "id").(uint32)
+
+	// parse body paylod json request
+	var userUpdateReq models.UserUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&userUpdateReq); err != nil {
+		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("invalid body format")), nil)
+		return
+	}
+
+	var user, dbUser models.User
+	if err := userUpdateReq.UpdateUserModel(&user); err != nil {
+		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+
+	// connect db
+	db, err := database.ConnectDB()
+	if err != nil || db == nil {
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+
+	// check id in db
+	if err := db.Where("id = ?", user.ID).First(&dbUser).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.JSONResponseWriter(&w, http.StatusNotFound, *(models.NewErrorResponse("can't find specified user")), nil)
+			return
+		}
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+
+	if userID != dbUser.ID {
+		utils.JSONResponseWriter(&w, http.StatusForbidden, *(models.NewErrorResponse("can't do specified action as this user")), nil)
+		return
+	}
+
+	dbUser = models.User{}
+	err = db.Where("id <> ? AND email = ?", user.ID, user.Email).First(&dbUser).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	} else if err == nil {
+		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("existing email")), nil)
+		return
+	}
+
+	if user.Password != "" {
+		if user.Password, err = utils.HashPassword(user.Password); err != nil {
+			utils.JSONResponseWriter(&w, http.StatusForbidden, *(models.NewErrorResponse(err.Error())), nil)
+			return
+		}
+	}
+
+	if err := db.Model(&user).Updates(user).Error; err != nil {
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+
+	utils.JSONResponseWriter(&w, http.StatusNoContent, nil, nil)
+	return
+}
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	userID := context.Get(r, "id").(uint32)
+
+	if idStr == "" || !utils.IsInteger(idStr) {
+		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("invalid id format")), nil)
+		return
+	}
+
+	idStr64, _ := strconv.ParseUint(idStr, 10, 64)
+	id := uint32(idStr64)
+
+	// connect db
+	db, err := database.ConnectDB()
+	if err != nil || db == nil {
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+
+	var dbUser models.User
+	if err := db.Where("id = ?", id).First(&dbUser).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.JSONResponseWriter(&w, http.StatusNotFound,
+				*(models.NewErrorResponse("can't find this user")), nil)
+			return
+		}
+
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError,
+			*(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+
+	if userID != id {
+		utils.JSONResponseWriter(&w, http.StatusForbidden, *(models.NewErrorResponse("can't do any action at this user")), nil)
+		return
+	}
+
+	if err := db.Delete(&dbUser, id).Error; err != nil {
+		utils.JSONResponseWriter(&w, http.StatusForbidden, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+
+	var userRes models.UserResponse
+	userRes.InsertFromModel(dbUser)
 
 	utils.JSONResponseWriter(&w, http.StatusOK, userRes, nil)
 	return

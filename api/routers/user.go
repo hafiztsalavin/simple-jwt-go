@@ -15,6 +15,8 @@ func AddUserRoutes(router *mux.Router) error {
 
 	userRouter := router.PathPrefix("/users").Subrouter()
 	userRouter.Path("/{id}").HandlerFunc(utils.ChainHandlerFuncs([]utils.Middleware{middlewares.CheckJWT}, controllers.GetUser)).Methods("GET").Name("GetUser")
+	userRouter.Queries().HandlerFunc(utils.ChainHandlerFuncs([]utils.Middleware{middlewares.CheckJWT}, controllers.UpdateUser)).Methods("PATCH").Name("UpdateUser")
+	userRouter.Path("/{id}").HandlerFunc(utils.ChainHandlerFuncs([]utils.Middleware{middlewares.CheckJWT}, controllers.DeleteUser)).Methods("DELETE").Name("DeleteUser")
 
 	return nil
 }
