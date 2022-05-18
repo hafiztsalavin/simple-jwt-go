@@ -63,7 +63,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.JSONResponseWriter(&w, http.StatusCreated, nil, nil)
+	utils.JSONResponseWriter(&w, http.StatusCreated, map[string]interface{}{"message": "registration success"}, nil)
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +84,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check username in db
-	if err := db.Where("username = ?", creds.Username).First(&user).Error; err != nil {
+	if err := db.Where("email = ?", creds.Email).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("wrong password or username")), nil)
 			return
@@ -107,7 +107,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	// build
 	claims := &auth.Claims{
 		ID:       user.ID,
-		Username: creds.Username,
+		Username: user.Username,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
@@ -169,6 +169,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user, dbUser models.User
+	user.ID = userID
 	if err := userUpdateReq.UpdateUserModel(&user); err != nil {
 		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse(err.Error())), nil)
 		return
@@ -184,7 +185,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	// check id in db
 	if err := db.Where("id = ?", user.ID).First(&dbUser).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.JSONResponseWriter(&w, http.StatusNotFound, *(models.NewErrorResponse("can't find specified user")), nil)
+			utils.JSONResponseWriter(&w, http.StatusNotFound, *(models.NewErrorResponse("can't find this user")), nil)
 			return
 		}
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
@@ -192,17 +193,17 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userID != dbUser.ID {
-		utils.JSONResponseWriter(&w, http.StatusForbidden, *(models.NewErrorResponse("can't do specified action as this user")), nil)
+		utils.JSONResponseWriter(&w, http.StatusForbidden, *(models.NewErrorResponse("can't do action at this user")), nil)
 		return
 	}
 
 	dbUser = models.User{}
-	err = db.Where("id <> ? AND email = ?", user.ID, user.Email).First(&dbUser).Error
+	err = db.Where("username = ? AND email = ?", user.Username, user.Email).First(&dbUser).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
 		return
 	} else if err == nil {
-		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("existing email")), nil)
+		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("existing email or username")), nil)
 		return
 	}
 
@@ -214,7 +215,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.Model(&user).Updates(user).Error; err != nil {
-		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse("username or email already exists")), nil)
 		return
 	}
 

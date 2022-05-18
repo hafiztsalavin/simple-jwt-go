@@ -31,7 +31,7 @@ type UserResponse struct {
 }
 
 type UserUpdateRequest struct {
-	ID       uint32 `json:"id"`
+	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
@@ -61,11 +61,7 @@ func (ur *UserResponse) InsertFromModel(user User) error {
 }
 
 func (ur *UserUpdateRequest) UpdateUserModel(target *User) error {
-	if ur.ID == 0 {
-		return errors.New("id cannot be left blank/empty")
-	}
-
-	if !validator.IsPrintableASCII(ur.Password) || !validator.IsEmail(ur.Email) {
+	if !validator.IsPrintableASCII(ur.Username) || !validator.IsPrintableASCII(ur.Password) || !validator.IsEmail(ur.Email) {
 		return errors.New("email/password have bad format or character")
 	}
 
@@ -77,7 +73,9 @@ func (ur *UserUpdateRequest) UpdateUserModel(target *User) error {
 		target.Password = ur.Password
 	}
 
-	target.ID = ur.ID
+	if ur.Username != "" {
+		target.Username = ur.Username
+	}
 
 	return nil
 }
