@@ -8,6 +8,7 @@ import (
 	validator "github.com/asaskevich/govalidator"
 )
 
+// struct model for users table in db
 type User struct {
 	ID        uint32    `gorm:"serial;" json:"id"`
 	Username  string    `gorm:"size:255;not null;unique" json:"username"`
@@ -17,12 +18,14 @@ type User struct {
 	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
+// struct model thats holds registration request
 type RegistrationRequest struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
+// struct model thats holds user response
 type UserResponse struct {
 	ID        uint32    `json:"id"`
 	Username  string    `json:"username"`
@@ -30,13 +33,15 @@ type UserResponse struct {
 	CreatedAt time.Time `json:"registered_at"`
 }
 
+// struct model thats holds user update request
+
 type UserUpdateRequest struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-func (rr *RegistrationRequest) CreateUser(target *User) error {
+func (rr *RegistrationRequest) CreateUserModel(target *User) error {
 	if !utils.IsNonEmpty(rr.Username, rr.Email, rr.Password) {
 		return errors.New("empty format")
 	}
@@ -52,7 +57,7 @@ func (rr *RegistrationRequest) CreateUser(target *User) error {
 	return nil
 }
 
-func (ur *UserResponse) InsertFromModel(user User) error {
+func (ur *UserResponse) UserFromModel(user User) error {
 	ur.ID = user.ID
 	ur.Username = user.Username
 	ur.Email = user.Email

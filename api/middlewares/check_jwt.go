@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/context"
 )
 
+// check jwt is middleware that checks from incoming request has correct token signed with the secret key belonging to the system
 func CheckJWT(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authorizationHeader := r.Header.Get("Authorization")

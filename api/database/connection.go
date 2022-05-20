@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+// provide connection with the database specified in the config varibales
 func ConnectDB() (*gorm.DB, error) {
 	newLogger := logger.New(
 		log.New(os.Stderr, "\r\n", log.LstdFlags), // io writer

@@ -16,12 +16,13 @@ func Run() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", homePage)
 
-	// initialize routes
+	// Initialize routes
 	routers.UserRoutes(r)
 
 	writeTimeout, _ := strconv.Atoi(os.Getenv("WRITE_TIMEOUT_SEC"))
 	readTimeout, _ := strconv.Atoi(os.Getenv("READ_TIMEOUT_SEC"))
 
+	// Get port from env.
 	server := &http.Server{
 		Handler:      r,
 		Addr:         fmt.Sprintf("localhost:%s", os.Getenv("API_PORT")),

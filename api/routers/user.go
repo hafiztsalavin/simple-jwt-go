@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Define routes
 func UserRoutes(router *mux.Router) error {
 	router.HandleFunc("/signup", controllers.SignUp).Methods("POST").Name("SignUp")
 	router.HandleFunc("/signin", controllers.SignIn).Methods("POST").Name("SignIn")

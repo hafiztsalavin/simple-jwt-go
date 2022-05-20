@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// JSON http response
 func JSONResponseWriter(w *http.ResponseWriter, statusCode int, body interface{}, headerFields map[string]string) error {
 	if body != nil {
 		(*w).Header().Set("Content-Type", "application/json")

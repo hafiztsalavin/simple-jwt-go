@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	// Find and read the config file
 	err := godotenv.Load(".env")
 
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 
 type Middleware func(http.Handler) http.Handler
 
+// collection funcs of middlewares
 func HandlerFuncs(middlewares []Middleware, handlerFunc func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
 	var handler http.Handler = http.HandlerFunc(handlerFunc)
 
