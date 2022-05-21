@@ -1,0 +1,83 @@
+swagger: '2.0'
+
+info:
+  title: Simple JWT Go
+  description: >-
+    The api Authentication using JWT written in GO with a PostgreSQL databases
+  version: master
+  
+host: localhost:8080
+schemes:
+  - http
+
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  '/healthz':
+    get:
+      summary: Check of the service
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: page not found
+  '/users':
+    post:
+      summary: Create a new user.
+      tags:
+        - User
+      parameters:
+        - in: body
+          name: user
+          schema:
+            $ref: '#/definitions/RegistrationRequest'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/JSONResponse'
+        '400':
+          $ref: '#/responses/ErrorBadRequest'
+        '500':
+          $ref: '#/responses/InternalServerError'
+
+definitions:
+  RegistrationRequest:
+    properties:
+      username:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+    required:  
+      - username
+      - email
+      - password
+  JSONResponse:
+    type: object
+    properties:
+      message:
+        type: string
+  Error:
+    type: object
+    properties:
+      message:
+        type: string
+
+responses:
+  ErrorBadRequest:
+    description: Bad Request
+    schema:
+      $ref: '#/definitions/Error'
+  InternalServerError:
+    description: Status Internal Server Error
+    schema:
+      $ref: '#/definitions/Error'
+  ErrorNotFound:
+    description: Not Found

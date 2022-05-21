@@ -14,7 +14,7 @@ import (
 
 func Run() {
 	r := mux.NewRouter()
-	r.HandleFunc("/", homePage)
+	r.HandleFunc("/healthz", homePage)
 
 	// Initialize routes
 	routers.UserRoutes(r)
