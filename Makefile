@@ -1,0 +1,6 @@
+
+
+
+
+server.swagger:
+	swagger generate 

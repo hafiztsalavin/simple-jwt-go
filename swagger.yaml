@@ -1,0 +1,232 @@
+swagger: '2.0'
+
+info:
+  title: Simple JWT Go
+  description: >-
+    The api Authentication using JWT written in GO with a PostgreSQL databases
+  version: master
+  
+host: localhost:8080
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+
+paths:
+  '/healthz':
+    get:
+      summary: Check of the service
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+        404:
+          description: page not found
+  '/signup':
+    post:
+      summary: Registration
+      description: The registration end point for create a new user from JSON request body.
+      tags:
+        - User
+      parameters:
+        - in: body
+          name: user
+          description: JSON required for signup
+          required: true
+          schema:
+            $ref: '#/definitions/RegistrationUserRequest'
+      responses:
+        201:
+          description: Created
+          schema:
+            $ref: '#/definitions/JSONResponse'
+        400:
+          $ref: '#/responses/ErrorBadRequest'
+        500:
+          $ref: '#/responses/InternalServerError'
+          
+  '/signin':
+    post:
+      summary: Login
+      description: The signin end point for login with basic authentication.
+      tags:
+        - User
+      parameters:
+        - in: body
+          name: user
+          description: required for login
+          required: true
+          schema:
+            $ref: '#/definitions/LoginUserRequest'
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONResponseToken'
+        400:
+          $ref: '#/responses/ErrorBadRequest'
+        401:
+          $ref: '#/responses/ErrorUnauthorized'
+        500:
+          $ref: '#/responses/InternalServerError'
+  
+  '/account':
+    get:
+      summary: User profile
+      description : The user profile endpoint returns information about the user that has authorized with the application.
+      tags: 
+        - Account
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONUserResponse'
+        400:
+          $ref: '#/responses/ErrorBadRequest'
+        401:
+          $ref: '#/responses/ErrorUnauthorized'
+        500:
+          $ref: '#/responses/InternalServerError'
+    
+    patch:
+      summary: Update user profile
+      description : The update user endpoint expects an username, email and new password in the request body. It updates the password for the user record with matching email and has authorized with the application.
+      tags: 
+        - Account
+      security:
+        - Bearer: []
+      parameters:
+        - in: body
+          name: user
+          description: JSON required for signup
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateUserRequest'
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONUserResponse'
+        400:
+          $ref: '#/responses/ErrorBadRequest'
+        401:
+          $ref: '#/responses/ErrorUnauthorized'
+        500:
+          $ref: '#/responses/InternalServerError'
+
+    delete:
+      summary: Destroy user profile
+      description :  The delete user profile endpoint to destroy user profile that has authorized with the application.
+      tags: 
+        - Account
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/JSONUserResponse'
+        400:
+          $ref: '#/responses/ErrorBadRequest'
+        401:
+          $ref: '#/responses/ErrorUnauthorized'
+        500:
+          $ref: '#/responses/InternalServerError'
+          
+definitions:
+  RegistrationUserRequest:
+    properties:
+      username:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+    required:  
+      - username
+      - email
+      - password
+  LoginUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:  
+      - email
+      - password
+  UpdateUserRequest:
+    properties:
+      username:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+    required:
+      - username
+      - email
+      - password
+  JSONResponse:
+    type: object
+    properties:
+      message:
+        type: string
+  JSONResponseToken:
+    type: object
+    properties:
+      token:
+        type: string
+  JSONUserResponse:      
+    properties:
+      id:
+        type: integer
+      username:
+        type: string
+      email:
+        type: string
+      registered_at:
+        type: string
+    required:  
+      - id
+      - username
+      - email
+      - registered_at
+  Error:
+    type: object
+    properties:
+      message:
+        type: string
+
+
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+
+responses:
+  ErrorBadRequest:
+    description: Bad Request
+    schema:
+      $ref: '#/definitions/Error'
+  ErrorUnauthorized:
+    description: Unauthorized
+    schema:
+      $ref: '#/definitions/Error'
+  InternalServerError:
+    description: Status Internal Server Error
+    schema:
+      type: string
+  ErrorNotFound:
+    description: Not Found
+    
+    
+    
+    
+    
