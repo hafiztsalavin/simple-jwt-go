@@ -3,7 +3,7 @@ swagger: '2.0'
 info:
   title: Simple JWT Go
   description: >-
-    The api Authentication using JWT written in GO with a PostgreSQL databases
+    This is the API documentation for api Authentication using JWT written in GO with a PostgreSQL databases.
   version: master
   
 host: localhost:8080
@@ -18,6 +18,8 @@ paths:
   '/healthz':
     get:
       summary: Check of the service
+      tags:
+        - Default
       produces:
         - application/json
       responses:
