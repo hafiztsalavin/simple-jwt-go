@@ -6,23 +6,26 @@ import (
 	"simple-jwt-go/api/auth"
 	"simple-jwt-go/api/models"
 	"simple-jwt-go/api/utils"
-	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/context"
 )
 
-func CheckJWT(next http.Handler) http.Handler {
+// check cookie is middleware that checks jwt token from incoming request has correct token or not
+func CheckCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authorizationHeader := r.Header.Get("Authorization")
-		if !strings.Contains(authorizationHeader, "Bearer ") {
-			utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("authentication failed")), nil)
+		authorizationCookie, err := r.Cookie("token")
+		if err != nil {
+			if err == http.ErrNoCookie {
+				utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("authentication failed")), nil)
+				return
+			}
+			utils.JSONResponseWriter(&w, http.StatusBadRequest, nil, nil)
 			return
 		}
 
-		jwtTokenString := strings.Replace(authorizationHeader, "Bearer ", "", -1)
+		jwtTokenString := authorizationCookie.Value
 		claims := &auth.Claims{}
-
 		jwtToken, err := jwt.ParseWithClaims(jwtTokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("JWT_KEY")), nil
 		})
@@ -32,7 +35,6 @@ func CheckJWT(next http.Handler) http.Handler {
 				utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("authentication failed")), nil)
 				return
 			}
-
 			utils.JSONResponseWriter(&w, http.StatusBadRequest, nil, nil)
 			return
 		}

@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"simple-jwt-go/api/auth"
@@ -68,6 +69,12 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
+	authorizationCookie, err := r.Cookie("token")
+	if authorizationCookie != nil {
+		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("Already logged in")), nil)
+		return
+	}
+
 	var creds auth.Credentials
 	var user models.User
 
@@ -119,8 +126,22 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cookie := &http.Cookie{
+		Name:    "token",
+		Value:   tokenString,
+		Expires: expirationTime,
+	}
+
+	// http.SetCookie(w,
+	// 	&http.Cookie{
+	// 		Name:    "token",
+	// 		Value:   tokenString,
+	// 		Expires: expirationTime,
+	// 	})
+	http.SetCookie(w, cookie)
+	fmt.Println(cookie)
 	// respond with token
-	utils.JSONResponseWriter(&w, http.StatusOK, map[string]interface{}{"token": tokenString}, nil)
+	utils.JSONResponseWriter(&w, http.StatusOK, map[string]interface{}{"token": "login success"}, nil)
 	return
 }
 
@@ -264,5 +285,50 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userRes.UserFromModel(dbUser)
 
 	utils.JSONResponseWriter(&w, http.StatusOK, userRes, nil)
+	return
+}
+
+func Logout(w http.ResponseWriter, r *http.Request) {
+	_, err := r.Cookie("token")
+	if err != nil {
+		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("Already logged out")), nil)
+		return
+	}
+
+	userId := context.Get(r, "id").(uint32)
+	userName := context.Get(r, "username").(string)
+
+	// generate jwt
+
+	expirationTime := time.Now().Add(-(2 * time.Hour)) // Set expiry date to the past
+	claims := &auth.Claims{
+		ID:       userId,
+		Username: userName,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_KEY")))
+	if err != nil {
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+
+	cookie := &http.Cookie{
+		Name:    "token",
+		Value:   tokenString,
+		Expires: expirationTime,
+	}
+	// http.SetCookie(w,
+	// 	&http.Cookie{
+	// 		Name:    "token",
+	// 		Value:   tokenString,
+	// 		Expires: expirationTime,
+	// 	})
+	http.SetCookie(w, cookie)
+	fmt.Println(cookie)
+	utils.JSONResponseWriter(&w, http.StatusOK, map[string]interface{}{"message": "successfully logged out"}, nil)
 	return
 }
