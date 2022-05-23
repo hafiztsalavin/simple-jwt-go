@@ -34,7 +34,6 @@ type UserResponse struct {
 }
 
 // struct model thats holds user update request
-
 type UserUpdateRequest struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`

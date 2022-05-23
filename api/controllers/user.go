@@ -5,14 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"simple-jwt-go/api/auth"
 	"simple-jwt-go/api/database"
 	"simple-jwt-go/api/models"
 	"simple-jwt-go/api/utils"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/context"
 	"gorm.io/gorm"
 )
@@ -111,16 +109,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 
 	// generate jwt
 	expirationTime := time.Now().Add(time.Minute * 30)
-	claims := &auth.Claims{
-		ID:       user.ID,
-		Username: user.Username,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_KEY")))
+	tokenString, err := auth.CreateJWTToken(user)
 	if err != nil {
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
 		return
@@ -131,17 +120,11 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		Value:   tokenString,
 		Expires: expirationTime,
 	}
-
-	// http.SetCookie(w,
-	// 	&http.Cookie{
-	// 		Name:    "token",
-	// 		Value:   tokenString,
-	// 		Expires: expirationTime,
-	// 	})
 	http.SetCookie(w, cookie)
+
 	fmt.Println(cookie)
-	// respond with token
-	utils.JSONResponseWriter(&w, http.StatusOK, map[string]interface{}{"token": "login success"}, nil)
+
+	utils.JSONResponseWriter(&w, http.StatusOK, map[string]interface{}{"message": "login success"}, nil)
 	return
 }
 
@@ -297,20 +280,11 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	userId := context.Get(r, "id").(uint32)
 	userName := context.Get(r, "username").(string)
+	user := models.User{ID: userId, Username: userName}
 
 	// generate jwt
-
 	expirationTime := time.Now().Add(-(2 * time.Hour)) // Set expiry date to the past
-	claims := &auth.Claims{
-		ID:       userId,
-		Username: userName,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_KEY")))
+	tokenString, err := auth.CreateJWTToken(user)
 	if err != nil {
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
 		return
@@ -321,14 +295,8 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		Value:   tokenString,
 		Expires: expirationTime,
 	}
-	// http.SetCookie(w,
-	// 	&http.Cookie{
-	// 		Name:    "token",
-	// 		Value:   tokenString,
-	// 		Expires: expirationTime,
-	// 	})
 	http.SetCookie(w, cookie)
-	fmt.Println(cookie)
+
 	utils.JSONResponseWriter(&w, http.StatusOK, map[string]interface{}{"message": "successfully logged out"}, nil)
 	return
 }
