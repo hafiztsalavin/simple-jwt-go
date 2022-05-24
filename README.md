@@ -11,7 +11,7 @@ Learn about JWT Authentication in Golang REST APIs and securing it with Authenti
 - [x] Creates the migrations/seeds for the database.
 - [x] Request for login, returning JWT token and set as a cookies.
 - [x] CRUD For the users (Delete, Patch and Read for user).
-- [ ] Returning access token and refresh token to refresh the access tokens, if current refresh token is valid.
+- [x] Returning access token and refresh token to refresh the access tokens, if current refresh token is valid.
 - [ ] Unit Test everything.
 - [ ] Documentation Spec API.
 - [ ] Docker later.
