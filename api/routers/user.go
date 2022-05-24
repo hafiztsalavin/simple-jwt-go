@@ -13,11 +13,13 @@ func UserRoutes(router *mux.Router) error {
 	router.HandleFunc("/signup", controllers.SignUp).Methods("POST").Name("SignUp")
 	router.HandleFunc("/signin", controllers.SignIn).Methods("POST").Name("SignIn")
 
-	router.HandleFunc("/logout", utils.HandlerFuncs([]utils.Middleware{middlewares.CheckCookie}, controllers.Logout)).Methods("GET").Name("Logout")
+	router.HandleFunc("/logout", utils.HandlerFuncs([]utils.Middleware{middlewares.CheckAccess}, controllers.Logout)).Methods("GET").Name("Logout")
 
-	router.HandleFunc("/account", utils.HandlerFuncs([]utils.Middleware{middlewares.CheckCookie}, controllers.GetUser)).Methods("GET").Name("GetUser")
-	router.HandleFunc("/account", utils.HandlerFuncs([]utils.Middleware{middlewares.CheckCookie}, controllers.DeleteUser)).Methods("DELETE").Name("DeleteUser")
-	router.HandleFunc("/account", utils.HandlerFuncs([]utils.Middleware{middlewares.CheckCookie}, controllers.UpdateUser)).Methods("PATCH").Name("UpdateUser")
+	router.HandleFunc("/account", utils.HandlerFuncs([]utils.Middleware{middlewares.CheckAccess}, controllers.GetUser)).Methods("GET").Name("GetUser")
+	router.HandleFunc("/account", utils.HandlerFuncs([]utils.Middleware{middlewares.CheckAccess}, controllers.DeleteUser)).Methods("DELETE").Name("DeleteUser")
+	router.HandleFunc("/account", utils.HandlerFuncs([]utils.Middleware{middlewares.CheckAccess}, controllers.UpdateUser)).Methods("PATCH").Name("UpdateUser")
+
+	router.HandleFunc("/refresh", utils.HandlerFuncs([]utils.Middleware{middlewares.CheckRefresh}, controllers.Refresh)).Methods("GET").Name("Refresh")
 
 	return nil
 }

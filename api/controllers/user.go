@@ -67,7 +67,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
-	authorizationCookie, err := r.Cookie("token")
+	authorizationCookie, err := r.Cookie("access_token")
 	if authorizationCookie != nil {
 		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("Already logged in")), nil)
 		return
@@ -108,21 +108,32 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// generate jwt
-	expirationTime := time.Now().Add(time.Minute * 30)
-	tokenString, err := auth.CreateJWTToken(user)
+	expirationTimeAccessToken := time.Now().Add(time.Minute * 1)
+	accessToken, err := auth.CreateJWTToken(user.ID, user.Email)
 	if err != nil {
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
 		return
 	}
 
+	refreshToken, err := auth.CreateRefreshToken(accessToken)
+	if err != nil {
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
 	cookie := &http.Cookie{
-		Name:    "token",
-		Value:   tokenString,
-		Expires: expirationTime,
+		Name:    "access_token",
+		Value:   accessToken,
+		Expires: expirationTimeAccessToken,
 	}
 	http.SetCookie(w, cookie)
 
-	fmt.Println(cookie)
+	expirationTimeRefreshToken := time.Now().Add(time.Minute * 5)
+	refreshCookie := &http.Cookie{
+		Name:    "refresh_token",
+		Value:   refreshToken,
+		Expires: expirationTimeRefreshToken,
+	}
+	http.SetCookie(w, refreshCookie)
 
 	utils.JSONResponseWriter(&w, http.StatusOK, map[string]interface{}{"message": "login success"}, nil)
 	return
@@ -272,7 +283,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-	_, err := r.Cookie("token")
+	_, err := r.Cookie("access_token")
 	if err != nil {
 		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("Already logged out")), nil)
 		return
@@ -280,18 +291,17 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	userId := context.Get(r, "id").(uint32)
 	userName := context.Get(r, "username").(string)
-	user := models.User{ID: userId, Username: userName}
 
 	// generate jwt
 	expirationTime := time.Now().Add(-(2 * time.Hour)) // Set expiry date to the past
-	tokenString, err := auth.CreateJWTToken(user)
+	tokenString, err := auth.CreateJWTToken(userId, userName)
 	if err != nil {
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
 		return
 	}
 
 	cookie := &http.Cookie{
-		Name:    "token",
+		Name:    "access_token",
 		Value:   tokenString,
 		Expires: expirationTime,
 	}
@@ -299,4 +309,8 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	utils.JSONResponseWriter(&w, http.StatusOK, map[string]interface{}{"message": "successfully logged out"}, nil)
 	return
+}
+
+func Refresh(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Welcome to Golang REST - API")
 }

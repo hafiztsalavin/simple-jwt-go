@@ -10,3 +10,8 @@ type Claims struct {
 	Username string `json:"username"`
 	jwt.StandardClaims
 }
+
+type AccessClaims struct {
+	AccessToken string `json:"access_token"`
+	jwt.StandardClaims
+}
