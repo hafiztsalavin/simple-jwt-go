@@ -6,8 +6,8 @@ import (
 
 // result as an auth token
 type Claims struct {
-	ID       uint32 `json:"id"`
-	Username string `json:"username"`
+	Id    uint32 `json:"id"`
+	Email string `json:"username"`
 	jwt.StandardClaims
 }
 

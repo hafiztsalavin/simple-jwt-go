@@ -7,14 +7,12 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-func CreateJWTToken(userId uint32, username string) (string, error) {
-	// 5 minute expired
-	expirationTime := time.Now().Add(time.Minute * 1)
+func CreateJWTToken(userId uint32, email string, exp time.Time) (string, error) {
 	claims := &Claims{
-		ID:       userId,
-		Username: username,
+		Id:    userId,
+		Email: email,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
+			ExpiresAt: exp.Unix(),
 		},
 	}
 
@@ -27,12 +25,11 @@ func CreateJWTToken(userId uint32, username string) (string, error) {
 	return tokenString, nil
 }
 
-func CreateRefreshToken(accessToken string) (string, error) {
-	expirationTime := time.Now().Add(time.Minute * 5)
+func CreateRefreshToken(accessToken string, exp time.Time) (string, error) {
 	claimsRefresh := &AccessClaims{
 		AccessToken: accessToken,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
+			ExpiresAt: exp.Unix(),
 		},
 	}
 

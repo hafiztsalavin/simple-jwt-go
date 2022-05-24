@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"simple-jwt-go/api/auth"
 	"simple-jwt-go/api/database"
@@ -107,33 +106,22 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// generate jwt
-	expirationTimeAccessToken := time.Now().Add(time.Minute * 1)
-	accessToken, err := auth.CreateJWTToken(user.ID, user.Email)
+	// generate access token and refresh token
+	expirationAccessToken := time.Now().Add(time.Minute * 1)
+	accessToken, err := auth.CreateJWTToken(user.ID, user.Email, expirationAccessToken)
 	if err != nil {
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
 		return
 	}
+	utils.AddCookie(w, "access_token", accessToken, expirationAccessToken)
 
-	refreshToken, err := auth.CreateRefreshToken(accessToken)
+	expirationRefreshToken := time.Now().Add(time.Minute * 5)
+	refreshToken, err := auth.CreateRefreshToken(accessToken, expirationRefreshToken)
 	if err != nil {
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
 		return
 	}
-	cookie := &http.Cookie{
-		Name:    "access_token",
-		Value:   accessToken,
-		Expires: expirationTimeAccessToken,
-	}
-	http.SetCookie(w, cookie)
-
-	expirationTimeRefreshToken := time.Now().Add(time.Minute * 5)
-	refreshCookie := &http.Cookie{
-		Name:    "refresh_token",
-		Value:   refreshToken,
-		Expires: expirationTimeRefreshToken,
-	}
-	http.SetCookie(w, refreshCookie)
+	utils.AddCookie(w, "refresh_token", refreshToken, expirationRefreshToken)
 
 	utils.JSONResponseWriter(&w, http.StatusOK, map[string]interface{}{"message": "login success"}, nil)
 	return
@@ -290,27 +278,67 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userId := context.Get(r, "id").(uint32)
-	userName := context.Get(r, "username").(string)
+	email := context.Get(r, "email").(string)
 
 	// generate jwt
-	expirationTime := time.Now().Add(-(2 * time.Hour)) // Set expiry date to the past
-	tokenString, err := auth.CreateJWTToken(userId, userName)
+	expiration := time.Now().Add(-(2 * time.Hour))
+	accessToken, err := auth.CreateJWTToken(userId, email, expiration)
 	if err != nil {
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
 		return
 	}
+	utils.AddCookie(w, "access_token", accessToken, expiration)
 
-	cookie := &http.Cookie{
-		Name:    "access_token",
-		Value:   tokenString,
-		Expires: expirationTime,
+	refreshToken, err := auth.CreateRefreshToken(accessToken, expiration)
+	if err != nil {
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		return
 	}
-	http.SetCookie(w, cookie)
+	utils.AddCookie(w, "refresh_token", refreshToken, expiration)
 
 	utils.JSONResponseWriter(&w, http.StatusOK, map[string]interface{}{"message": "successfully logged out"}, nil)
 	return
 }
 
 func Refresh(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Welcome to Golang REST - API")
+	userId := context.Get(r, "id").(uint32)
+	email := context.Get(r, "email").(string)
+	// connect db
+	db, err := database.ConnectDB()
+	if err != nil {
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+
+	// check username in db by email
+	var user models.User
+	if err := db.Where("id = ? AND email = ?", userId, email).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("wrong password or username")), nil)
+			return
+		}
+
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+
+	// generate access token and refresh token
+	expirationAccessToken := time.Now().Add(time.Minute * 1)
+	accessToken, err := auth.CreateJWTToken(user.ID, user.Email, expirationAccessToken)
+	if err != nil {
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+	utils.AddCookie(w, "access_token", accessToken, expirationAccessToken)
+
+	expirationRefreshToken := time.Now().Add(time.Minute * 5)
+	refreshToken, err := auth.CreateRefreshToken(accessToken, expirationRefreshToken)
+	if err != nil {
+		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
+		return
+	}
+	utils.AddCookie(w, "refresh_token", refreshToken, expirationRefreshToken)
+
+	utils.JSONResponseWriter(&w, http.StatusOK, map[string]interface{}{"message": "success refresh token"}, nil)
+	return
 }

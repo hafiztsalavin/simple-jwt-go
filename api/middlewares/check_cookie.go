@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"simple-jwt-go/api/auth"
@@ -46,8 +45,8 @@ func CheckAccess(next http.Handler) http.Handler {
 		}
 
 		defer context.Clear(r)
-		context.Set(r, "username", claims.Username)
-		context.Set(r, "id", claims.ID)
+		context.Set(r, "id", claims.Id)
+		context.Set(r, "email", claims.Email)
 
 		next.ServeHTTP(w, r)
 	})
@@ -59,7 +58,7 @@ func CheckRefresh(next http.Handler) http.Handler {
 		refreshCookie, err := r.Cookie("refresh_token")
 		if err != nil {
 			if err == http.ErrNoCookie {
-				utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("authentication failed, please login")), nil)
+				utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("your login session has expired. please re-login")), nil)
 				return
 			}
 			utils.JSONResponseWriter(&w, http.StatusBadRequest, nil, nil)
@@ -74,11 +73,9 @@ func CheckRefresh(next http.Handler) http.Handler {
 			return []byte(os.Getenv("JWT_REFRESH_KEY")), nil
 		})
 
-		fmt.Println("ini access token dr refresh: ", accessClaims.AccessToken)
-
 		if err != nil {
 			if err == jwt.ErrSignatureInvalid {
-				utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("authentication failed, please login")), nil)
+				utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("your login session has expired. please re-login")), nil)
 				return
 			}
 			utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse(err.Error())), nil)
@@ -86,7 +83,7 @@ func CheckRefresh(next http.Handler) http.Handler {
 		}
 
 		if !oldRefreshToken.Valid {
-			utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("authentication failed, please login")), nil)
+			utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("your login session has expired. please re-login")), nil)
 			return
 		}
 
@@ -100,12 +97,12 @@ func CheckRefresh(next http.Handler) http.Handler {
 			})
 
 			if jwtToken.Valid {
-				utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("your token still valid")), nil)
+				utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("your login sesion still valid")), nil)
 				return
 			}
 			if err == nil {
 				if err != jwt.ErrSignatureInvalid {
-					utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("your token still valid")), nil)
+					utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("your login sesion still valid")), nil)
 					return
 				}
 				utils.JSONResponseWriter(&w, http.StatusBadRequest, nil, nil)
@@ -113,8 +110,8 @@ func CheckRefresh(next http.Handler) http.Handler {
 			}
 
 			defer context.Clear(r)
-			context.Set(r, "username", claims.Username)
-			context.Set(r, "id", claims.ID)
+			context.Set(r, "id", claims.Id)
+			context.Set(r, "email", claims.Email)
 		}
 		next.ServeHTTP(w, r)
 	})
