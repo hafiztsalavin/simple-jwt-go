@@ -1,6 +1,6 @@
 # SIMPLE JWT GO
 
-This is just a simple API in Go, with basic authentication using JWT tokens and user management. All written in GO with a PostgreSQL databases.
+This is just a simple API in Go, with basic authentication using JWT tokens, user management and sets it to cookie for further Access. All written in GO with a PostgreSQL databases.
 
 ## Goals of this project:
 

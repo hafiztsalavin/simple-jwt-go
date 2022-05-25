@@ -6,12 +6,12 @@ import (
 
 // result as an auth token
 type Claims struct {
-	Id    uint32 `json:"id"`
-	Email string `json:"username"`
+	Id    uint32
+	Email string
 	jwt.StandardClaims
 }
 
 type AccessClaims struct {
-	AccessToken string `json:"access_token"`
+	AccessToken string
 	jwt.StandardClaims
 }
