@@ -17,7 +17,7 @@ func CheckAccess(next http.Handler) http.Handler {
 		authorizationCookie, err := r.Cookie("access_token")
 		if err != nil {
 			if err == http.ErrNoCookie {
-				utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("authentication failed")), nil)
+				utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("authentication failed1")), nil)
 				return
 			}
 			utils.JSONResponseWriter(&w, http.StatusBadRequest, nil, nil)

@@ -17,7 +17,8 @@ func Run() {
 	r.HandleFunc("/healthz", homePage)
 
 	// Initialize routes
-	routers.UserRoutes(r)
+	routers.Routes(r)
+	routers.UserAuthRoutes(r)
 
 	writeTimeout, _ := strconv.Atoi(os.Getenv("WRITE_TIMEOUT_SEC"))
 	readTimeout, _ := strconv.Atoi(os.Getenv("READ_TIMEOUT_SEC"))

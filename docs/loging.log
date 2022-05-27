@@ -1,3 +1,5 @@
-[36mINFO[0m[0031]                                               [36mduration[0m=3.861723ms [36mmethod[0m=GET [36mpath[0m=/account [36mstatus[0m=200
 {"duration":1019754233,"level":"info","method":"POST","msg":"","path":"/login","status":200,"time":"2022-05-27T15:42:20+07:00"}
 {"duration":5017074,"level":"info","method":"GET","msg":"","path":"/account","status":200,"time":"2022-05-27T15:42:25+07:00"}
+{"duration":1024908229,"level":"info","method":"POST","msg":"","path":"/login","status":200,"time":"2022-05-27T15:48:01+07:00"}
+{"duration":3809065,"level":"info","method":"GET","msg":"","path":"/account","status":200,"time":"2022-05-27T15:48:13+07:00"}
+{"duration":1033962784,"level":"info","method":"POST","msg":"","path":"/login","status":200,"time":"2022-05-27T15:57:28+07:00"}
