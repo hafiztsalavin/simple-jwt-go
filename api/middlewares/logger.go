@@ -1,7 +1,9 @@
 package middlewares
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"simple-jwt-go/api/logger"
 	"time"
 
@@ -10,6 +12,10 @@ import (
 
 func Log(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		file, err := os.OpenFile(os.Getenv("LOG_PATH"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			fmt.Println("Could Not Open Log File : " + err.Error())
+		}
 
 		start := time.Now()
 		lrw := logger.NewLog(w)
@@ -24,16 +30,18 @@ func Log(next http.Handler) http.Handler {
 			"status":   lrw.StatusCode,
 		})
 
-		switch {
-		case lrw.StatusCode > 0 && lrw.StatusCode < 400:
+		if lrw.StatusCode > 0 && lrw.StatusCode < 400 {
 			entry.Info(string(lrw.Body))
-		case lrw.StatusCode >= 400 && lrw.StatusCode < 500:
+		} else if lrw.StatusCode >= 400 && lrw.StatusCode < 500 {
 			entry.Warn(string(lrw.Body))
-		case lrw.StatusCode >= 500:
+		} else if lrw.StatusCode >= 500 {
 			entry.Error(string(lrw.Body))
-		default:
+		} else {
 			entry.Warnf("unknown code: %d", lrw.StatusCode)
 		}
+
+		logrus.SetOutput(file)
+		logrus.SetFormatter(&logrus.JSONFormatter{})
 
 	})
 }
