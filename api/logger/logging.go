@@ -2,21 +2,29 @@ package logger
 
 import "net/http"
 
-type ResponseData struct {
-	Status int
+type LoggingResponWriter struct {
+	wrapped    http.ResponseWriter
+	StatusCode int
+	Body       []byte
 }
 
-type LoggingResponWriter struct {
-	http.ResponseWriter
-	ResponseData *ResponseData
+func NewLog(wrapped http.ResponseWriter) *LoggingResponWriter {
+	return &LoggingResponWriter{wrapped: wrapped}
+}
+
+func (r *LoggingResponWriter) Header() http.Header {
+	return r.wrapped.Header()
 }
 
 func (r *LoggingResponWriter) Write(b []byte) (int, error) {
-	size, err := r.ResponseWriter.Write(b)
-	return size, err
+	if r.StatusCode >= 400 {
+		r.Body = append(r.Body, b...)
+	}
+
+	return r.wrapped.Write(b)
 }
 
 func (r *LoggingResponWriter) WriteHeader(statusCode int) {
-	r.ResponseWriter.WriteHeader(statusCode)
-	r.ResponseData.Status = statusCode
+	r.StatusCode = statusCode
+	r.wrapped.WriteHeader(statusCode)
 }

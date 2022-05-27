@@ -10,37 +10,29 @@ import (
 
 func Log(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		start := time.Now()
+		lrw := logger.NewLog(w)
 
-		responseData := &logger.ResponseData{
-			Status: 0,
-		}
-
-		lrw := logger.LoggingResponWriter{
-			ResponseWriter: w,
-			ResponseData:   responseData,
-		}
-
-		next.ServeHTTP(&lrw, r)
+		next.ServeHTTP(lrw, r)
 
 		duration := time.Since(start)
-
 		entry := logrus.WithFields(logrus.Fields{
 			"duration": duration,
 			"method":   r.Method,
 			"path":     r.RequestURI,
-			"status":   responseData.Status,
+			"status":   lrw.StatusCode,
 		})
 
 		switch {
-		case lrw.ResponseData.Status > 0 && lrw.ResponseData.Status < 400:
-			entry.Info()
-		case lrw.ResponseData.Status >= 400 && lrw.ResponseData.Status < 500:
-			entry.Warn()
-		case lrw.ResponseData.Status >= 500:
-			entry.Error()
+		case lrw.StatusCode > 0 && lrw.StatusCode < 400:
+			entry.Info(string(lrw.Body))
+		case lrw.StatusCode >= 400 && lrw.StatusCode < 500:
+			entry.Warn(string(lrw.Body))
+		case lrw.StatusCode >= 500:
+			entry.Error(string(lrw.Body))
 		default:
-			entry.Warnf("unknown code: %d", lrw.ResponseData.Status)
+			entry.Warnf("unknown code: %d", lrw.StatusCode)
 		}
 
 	})
