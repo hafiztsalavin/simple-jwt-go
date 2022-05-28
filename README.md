@@ -4,7 +4,7 @@ This is just a simple API in Go, with basic authentication using JWT tokens, use
 
 ## Goals of this project:
 
-Learn about JWT Authentication in Golang REST APIs and securing it with Authentication Middleware
+Learn about JWT Authentication in Golang REST APIs and securing it with Authentication Middleware.
 
 ## To-do:
 
@@ -17,9 +17,11 @@ Learn about JWT Authentication in Golang REST APIs and securing it with Authenti
 - [ ] Docker later.
 
 ## User Registration, User Login and Authorization process.
-This is diagram to show how to User Registration, Login and Authorization process.
-![jwt-authentication-flow](token_generate.png)
+I set access token will be expired in 1 minute and for Refresh token will be expired in 30 minute (just for testing).
 
+This is diagram to show how to User Registration, Login and Authorization process.
+![jwt-authentication-flow](https://github.com/hafiztsalavin/simple-jwt-go/blob/main/docs/token_generate.png)
 
 And this is for Refresh Token:
-![refresh-token-jwt-flow](refresh_token.png)
+![refresh-token-jwt-flow](https://github.com/hafiztsalavin/simple-jwt-go/blob/main/docs/refresh_token.png)
+
