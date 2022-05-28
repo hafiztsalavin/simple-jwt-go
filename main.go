@@ -6,6 +6,7 @@ import (
 
 	"simple-jwt-go/api"
 	"simple-jwt-go/migrations"
+	"simple-jwt-go/seeders"
 
 	"github.com/joho/godotenv"
 )
@@ -19,6 +20,10 @@ func main() {
 	} else {
 		if len(os.Args) > 2 && os.Args[2] == "migrate" {
 			if err := migrations.MigrateModels(); err != nil {
+				log.Fatalf("Error when migrate models, %v", err)
+			}
+		} else if len(os.Args) > 2 && os.Args[2] == "seed" {
+			if err := seeders.UserSeeder(); err != nil {
 				log.Fatalf("Error when migrate models, %v", err)
 			}
 		} else {

@@ -15,3 +15,11 @@ Learn about JWT Authentication in Golang REST APIs and securing it with Authenti
 - [ ] Unit Test everything.
 - [ ] Documentation Spec API.
 - [ ] Docker later.
+
+## User Registration, User Login and Authorization process.
+This is diagram to show how to User Registration, Login and Authorization process.
+![jwt-authentication-flow](token_generate.png)
+
+
+And this is for Refresh Token:
+![refresh-token-jwt-flow](refresh_token.png)
