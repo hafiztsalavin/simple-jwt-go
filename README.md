@@ -20,8 +20,8 @@ Learn about JWT Authentication in Golang REST APIs and securing it with Authenti
 I set access token will be expired in 1 minute and for Refresh token will be expired in 30 minute (just for testing).
 
 This is diagram to show how to User Registration, Login and Authorization process.
-![jwt-authentication-flow](https://github.com/hafiztsalavin/simple-jwt-go/blob/main/docs/token_generate.png)
+![jwt-authentication-flow](https://github.com/hafiztsalavin/simple-jwt-go/blob/main/docs/documentation/token_generate.png)
 
 And this is for Refresh Token:
-![refresh-token-jwt-flow](https://github.com/hafiztsalavin/simple-jwt-go/blob/main/docs/refresh_token.png)
+![refresh-token-jwt-flow](https://github.com/hafiztsalavin/simple-jwt-go/blob/main/docs//documentation/refresh_token.png)
 

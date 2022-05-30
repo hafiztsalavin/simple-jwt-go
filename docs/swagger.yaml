@@ -1,0 +1,371 @@
+openapi: 3.0.0
+info:
+  title: Simple JWT Go
+  description: This is the API documentation for API Authentication using JWT in GO with a PostgreSQL databases.
+  version: '1'
+servers:
+  - url: http:/localhost:8080
+    description: 'LocalServer'
+tags:
+    - name: user
+      description: API for register and login.
+    - name: auth
+      description: API for user management.
+      
+paths:
+  /register:
+    post:
+      summary: Create New User.
+      tags:
+        - user
+      description: 'Register with JSON-formatted request body.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                 #/components/schemas/RegistrationRequest
+        required: true
+        
+      responses:
+        '201':
+          description: Status Created User
+          content:
+            application/json:
+              schema:
+                example:
+                  message: registration success
+        '400':
+          description: Status Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+        '500':
+          description: Status Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+  /login:
+    post:
+      summary: Login User.
+      tags:
+        - user
+      description: 'Login with JSON-formatted request body.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                 #/components/schemas/Credentials
+        required: true
+        
+      responses:
+        '200':
+          description: Status OK 
+          headers: 
+            Access-Cookie:
+              schema: 
+                type: string
+                example: ACCESS_COOKIE=abcde12345; Path=/; HttpOnly
+            Refresh-Cookie:
+              schema: 
+                type: string
+                example: REFRESH_COOKIE=abcde12345; Path=/; HttpOnly
+          content:
+            application/json:
+              schema:
+                example:
+                  message: login success
+        '400':
+          description: Status Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+        '401':
+          description: Status Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+        '500':
+          description: Status Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+  
+  /auth/profile:
+    get:
+      security:
+        - cookieAuth: []
+      summary: Details user profile.
+      tags:
+        - auth
+      description: 'Showing user profile details.'
+      
+      responses:
+        '200':
+          description: Status OK 
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/User
+        '401':
+          description: Status Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+        '404':
+          description: Status Not Found
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+        '500':
+          description: Status Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+  /auth/user:
+    patch:
+      summary: Update user.
+      tags:
+        - auth
+      description: 'Update an existing user from JSON-formatted Request Body.'
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/UserUpdateRequest
+        required: true
+      
+      responses:
+        '201':
+          description: Status No Content 
+        '400':
+          description: Status Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+        '403':
+          description: Status Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+        '404':
+          description: Status Not Found
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+        '500':
+          description: Status Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+    delete:
+      security:
+        - cookieAuth: []
+      summary: Delete user.
+      tags:
+        - auth
+      description: 'Destroy the user profile.'
+      
+      responses:
+        '200':
+          description: Status OK 
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/User
+        '401':
+          description: Status Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+        '404':
+          description: Status Not Found
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+        '500':
+          description: Status Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+  /auth/logout:
+    get:
+      security:
+        - cookieAuth: []
+      summary: Logout user.
+      tags:
+        - auth
+      description: 'Logout user session.'
+      
+      responses:
+        '200':
+          description: Status OK 
+          content:
+            application/json:
+              schema:
+                example:
+                  message: logout success
+        '400':
+          description: Status Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+        '401':
+          description: Status Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+        '500':
+          description: Status Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+  /auth/refresh:
+    get:
+      security:
+        - cookieAuth: []
+      summary: Refresh access token.
+      tags:
+        - auth
+      description: 'Refresh login session based on access token and refresh token.'
+      
+      responses:
+        '200':
+          description: Status OK 
+          content:
+            application/json:
+              schema:
+                example:
+                  message: success refresh token
+          headers: 
+            Access-Cookie:
+              schema: 
+                type: string
+                example: ACCESS_COOKIE=abcde12345; Path=/; HttpOnly
+            Refresh-Cookie:
+              schema: 
+                type: string
+                example: REFRESH_COOKIE=abcde12345; Path=/; HttpOnly
+        '400':
+          description: Status Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+        '401':
+          description: Status Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+        '500':
+          description: Status Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ErrorResponse
+
+
+security:
+  - cookieAuth: [] 
+  
+components:
+  schemas:
+    RegistrationRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+    Credentials:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    UserUpdateRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    
+  securitySchemes:
+    cookieAuth:       
+      type: apiKey
+      in: cookie
+      name: ACCESS_COOKIE 
