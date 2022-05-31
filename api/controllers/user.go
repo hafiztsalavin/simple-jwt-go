@@ -50,7 +50,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
 		return
 	} else if err == nil {
-		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse("username or email already used, pls use another email or username")), nil)
+		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("username or email already used, pls use another email or username")), nil)
 		return
 	}
 
@@ -65,7 +65,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request) {
-	authorizationCookie, err := r.Cookie("access_token")
+	authorizationCookie, _ := r.Cookie("access_token")
 	if authorizationCookie != nil {
 		utils.JSONResponseWriter(&w, http.StatusBadRequest, *(models.NewErrorResponse("Already logged in")), nil)
 		return
@@ -90,7 +90,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	// check username in db by email
 	if err := db.Where("email = ?", creds.Email).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("wrong password or username")), nil)
+			utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("wrong password or email")), nil)
 			return
 		}
 
@@ -101,7 +101,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	// check password and comparing
 	passTrue := utils.CheckPassword(creds.Password, user.Password)
 	if !passTrue {
-		utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("wrong password or username")), nil)
+		utils.JSONResponseWriter(&w, http.StatusUnauthorized, *(models.NewErrorResponse("wrong password or email")), nil)
 		return
 	}
 
