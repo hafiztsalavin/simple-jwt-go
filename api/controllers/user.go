@@ -106,7 +106,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// generate access token and refresh token
-	expirationAccessToken := time.Now().Add(time.Minute * 1)
+	expirationAccessToken := time.Now().Add(time.Hour * 1)
 	accessToken, err := auth.CreateJWTToken(user.ID, user.Email, expirationAccessToken)
 	if err != nil {
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
@@ -114,7 +114,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 	utils.AddCookie(w, "access_token", accessToken, expirationAccessToken)
 
-	expirationRefreshToken := time.Now().Add(time.Minute * 5)
+	expirationRefreshToken := time.Now().Add(time.Hour * 5)
 	refreshToken, err := auth.CreateRefreshToken(accessToken, expirationRefreshToken)
 	if err != nil {
 		utils.JSONResponseWriter(&w, http.StatusInternalServerError, *(models.NewErrorResponse(err.Error())), nil)
