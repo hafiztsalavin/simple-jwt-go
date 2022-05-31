@@ -67,7 +67,7 @@ go run main.go -- migrate
 ```
 go run main.go -- seed
 ```
-7. Run api.
+6. Run api.
 ```
 go run main.go
 ```
