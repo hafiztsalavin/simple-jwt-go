@@ -13,7 +13,7 @@ Learn about JWT Authentication in Golang REST APIs and securing it with Authenti
 - [x] CRUD For the users (Delete, Patch and Read for user).
 - [x] Returning access token and refresh token to refresh the access tokens, if current refresh token is valid.
 - [x] Documentation Spec API.
-- [ ] Docker later.
+- [x] Docker.
 
 ## User Registration, User Login and Authorization process.
 I set access token will be expired in 1 minute and for Refresh token will be expired in 30 minute (just for testing).

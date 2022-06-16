@@ -26,7 +26,7 @@ func Run() {
 	// create new server based on port .env
 	server := &http.Server{
 		Handler:      r,
-		Addr:         fmt.Sprintf("localhost:%s", os.Getenv("API_PORT")),
+		Addr:         ":" + os.Getenv("API_PORT"),
 		WriteTimeout: time.Duration(writeTimeout) * time.Second,
 		ReadTimeout:  time.Duration(readTimeout) * time.Second,
 	}

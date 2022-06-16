@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+
+  simple-jwt-go:
+    build: .
+    container_name: simple-jwt-go
+    environment:
+      - DB_HOST=login-jwt
+    ports:
+      - 8008:8008
+    depends_on:
+      - login-jwt
+
+  login-jwt:
+    image: postgres:13-alpine
+    container_name: postgres-login-jwt
+    volumes:
+      - login-jwt:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    restart: always
+
+volumes:
+  login-jwt:
+  
